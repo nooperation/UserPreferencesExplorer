@@ -17,11 +17,11 @@ std::vector<uint8_t> ReadAllBytes(const std::string &path)
     try
     {
         std::ifstream inStream(path, std::ios::binary | std::ios::ate);
-        auto fileSize = (size_t)inStream.tellg();
+        auto fileSize = static_cast<size_t>(inStream.tellg());
         auto fileBytes = std::vector<uint8_t>(fileSize);
 
         inStream.seekg(0, std::ios::beg);
-        inStream.read((char *)&fileBytes[0], fileSize);
+        inStream.read(reinterpret_cast<char *>(&fileBytes[0]), fileSize);
         inStream.close();
 
         return fileBytes;
@@ -34,7 +34,8 @@ std::vector<uint8_t> ReadAllBytes(const std::string &path)
 }
 
 /// <summary>
-/// Decrypts the specified cipherText into <paramref name="out_plaintext"/> using the given key and initialization vector.
+/// Decrypts the specified cipherText into <paramref name="out_plaintext"/>
+/// using the given key and initialization vector.
 /// </summary>
 /// <param name="cipherText">Encrypted bytes to decrypt.</param>
 /// <param name="key">Key used for decryption.</param>
@@ -63,7 +64,14 @@ bool Decrypt(
         return false;
     }
 
-    is_successful = EVP_DecryptUpdate(ctx, &out_plaintext[0], &plaintext_length, &cipherText[0], (int)cipherText.size());
+    is_successful = EVP_DecryptUpdate(
+        ctx,
+        &out_plaintext[0],
+        &plaintext_length,
+        &cipherText[0],
+        static_cast<int>(cipherText.size())
+    );
+
     if (is_successful == false)
     {
         std::cerr << "EVP_DecryptUpdate - FAILED" << std::endl;
@@ -107,7 +115,16 @@ bool GetKeys(
     out_key.resize(cipher->key_len);
     out_initialization_vector.resize(cipher->iv_len);
 
-    auto result = EVP_BytesToKey(cipher, md, &salt[0], &source_bytes[0], (int)source_bytes.size(), kIterationCount, &out_key[0], &out_initialization_vector[0]);
+    auto result = EVP_BytesToKey(
+        cipher,
+        md,
+        &salt[0],
+        &source_bytes[0],
+        static_cast<int>(source_bytes.size()),
+        kIterationCount,
+        &out_key[0],
+        &out_initialization_vector[0]
+    );
     return result > 0;
 }
 
@@ -126,7 +143,7 @@ std::vector<uint8_t> MangleData(const std::vector<uint8_t> &data_to_mangle)
         auto mangled_character = ((index + 2) * mangled_data[index]) % 128;
         if (mangled_character != 0)
         {
-            mangled_data[index] = (uint8_t)mangled_character;
+            mangled_data[index] = static_cast<uint8_t>(mangled_character);
         }
     }
 
@@ -157,7 +174,7 @@ std::string GetMachineGuid()
     if (result != ERROR_SUCCESS)
     {
         RegCloseKey(key_handle);
-        std::cerr << "RegQueryValueEx - FAILED\n" << std::endl;
+        std::cerr << "RegQueryValueEx - FAILED" << std::endl;
         return "";
     }
 
@@ -166,7 +183,7 @@ std::string GetMachineGuid()
     if (result != ERROR_SUCCESS)
     {
         RegCloseKey(key_handle);
-        std::cerr << "RegQueryValueEx - FAILED\n" << std::endl;
+        std::cerr << "RegQueryValueEx - FAILED" << std::endl;
         return "";
     }
 
@@ -186,11 +203,11 @@ std::string GetPathToUserPreferencesBag()
 
     // Resize our container to hold the environment variable
     std::vector<int8_t> path(1);
-    auto required_path_length = GetEnvironmentVariableA(kEnvironmentVariable.c_str(), (LPSTR)&path[0], 0);
+    auto required_path_length = GetEnvironmentVariableA(kEnvironmentVariable.c_str(), reinterpret_cast<LPSTR>(&path[0]), 0);
     path.resize(required_path_length);
 
     // Get the actual environment variable
-    GetEnvironmentVariableA(kEnvironmentVariable.c_str(), (LPSTR)&path[0], (DWORD)path.size());
+    GetEnvironmentVariableA(kEnvironmentVariable.c_str(), reinterpret_cast<LPSTR>(&path[0]), static_cast<DWORD>(path.size()));
 
     // GetEnvironmentVariableA will add a null character in at the end, exclude it
     auto local_app_data_path = std::string(path.begin(), path.end() - 1);
