@@ -6,6 +6,7 @@
 
 #include <openssl/evp.h>
 #include <boost/algorithm/hex.hpp>
+#include <boost/program_options.hpp>
 
 #pragma comment(lib, "libeay32")
 
@@ -228,15 +229,39 @@ std::string DecryptUserPreferences(const std::string& file_path, const std::stri
 
 int main(int argc, char* argv[])
 {
+    namespace po = boost::program_options;
     static const auto kSalt = std::string("6E3F032949637D2E");
 
     try
     {
-        auto user_preferences_path = GetPathToUserPreferencesBag();
-        auto machine_guid = GetMachineGuid();
-        auto salt = kSalt;
+        auto arg_salt = po::value<std::string>()->default_value(kSalt, "");
+        auto arg_guid = po::value<std::string>()->default_value(GetMachineGuid(), "");
+        auto arg_path = po::value<std::string>()->default_value(GetPathToUserPreferencesBag(), "");
 
-        auto decrypted_preferences = DecryptUserPreferences(user_preferences_path, machine_guid, salt);
+        auto commandline_descriptions = po::options_description("Arguments");
+        commandline_descriptions.add_options()
+            ("help", "Help")
+            ("salt", arg_salt, "Salt used for key generation.")
+            ("guid", arg_guid, "GUID used for key generation.")
+            ("path", arg_path, "Path to the UserPreferences.bag to decrypt.");
+
+        auto parsed_options = po::parse_command_line(argc, argv, commandline_descriptions);
+        po::variables_map vm;
+        po::store(parsed_options, vm);
+        po::notify(vm);
+
+        if (vm.count("help"))
+        {
+            std::cout << commandline_descriptions << std::endl;
+            return EXIT_SUCCESS;
+        }
+
+        auto decrypted_preferences = DecryptUserPreferences(
+            vm["path"].as<std::string>(),
+            vm["guid"].as<std::string>(),
+            vm["salt"].as<std::string>()
+        );
+
         std::cout << decrypted_preferences << std::endl;
     }
     catch (const std::exception& ex)
@@ -244,6 +269,6 @@ int main(int argc, char* argv[])
         std::cerr << "Failed to decrypt user preferences: " << ex.what() << std::endl;
         return EXIT_FAILURE;
     }
-   
+
     return EXIT_SUCCESS;
 }
