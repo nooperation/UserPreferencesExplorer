@@ -74,7 +74,6 @@ namespace Encryption
                 ++num_blocks;
             }
             auto out_plaintext = std::vector<uint8_t>(cipher->block_size * num_blocks);
-            memset(&out_plaintext[0], 0, out_plaintext.size());
 
             EVP_CIPHER_CTX_init(ctx);
 
