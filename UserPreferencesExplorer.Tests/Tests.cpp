@@ -6,7 +6,8 @@
 #include "../UserPreferencesExplorer/Encryption.cpp"
 #include "../UserPreferencesExplorer/Utils.cpp"
 
-TEST_CASE("UserPreferences") {
+TEST_CASE("Encryption")
+{
     const auto guid = std::string("01234567-89ab-cdef-0123-456789abcdef");
     const auto salt = std::string("6E3F032949637D2E");
     const auto plaintext = std::string("{\"username\":\"example@example.com\",\"refresh_token\":\"\",\"scope_string\":\"\"}");
