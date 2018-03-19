@@ -3,8 +3,11 @@
 
 #include <unordered_map>
 
-#include "../UserPreferencesExplorer/Encryption.cpp"
-#include "../UserPreferencesExplorer/Utils.cpp"
+#include "../UserPreferences.Shared/Encryption.h"
+#include "../UserPreferences.Shared/Common.h"
+
+#include "../UserPreferences.Shared/Encryption.cpp"
+#include "../UserPreferences.Shared/Common.cpp"
 
 TEST_CASE("Encryption")
 {
@@ -26,14 +29,14 @@ TEST_CASE("Encryption")
         auto data_to_encrypt = std::vector<uint8_t>(plaintext.begin(), plaintext.end());
         data_to_encrypt.push_back('\0');
 
-        auto result = Encryption::EncryptData(data_to_encrypt, guid, salt);
+        auto result = UserPreferences::Encryption::EncryptData(data_to_encrypt, guid, salt);
 
         REQUIRE(result == ciphertext);
     }
 
     SECTION("Decrypt")
     {
-        auto result = Encryption::DecryptData(ciphertext, guid, salt);
+        auto result = UserPreferences::Encryption::DecryptData(ciphertext, guid, salt);
         auto result_string = std::string(result.begin(), result.end() - 1);
 
         REQUIRE(result_string == plaintext);
