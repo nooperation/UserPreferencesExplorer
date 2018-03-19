@@ -2,19 +2,18 @@
 #include <iostream>
 #include <boost/program_options.hpp>
 
-#include "UserPreferences.h"
-#include "Utils.h"
+#include "../UserPreferences.Shared/Common.h"
+#include "../UserPreferences.Shared/Encryption.h"
 
 int main(int argc, char* argv[])
 {
     namespace po = boost::program_options;
-    static const auto kSalt = std::string("6E3F032949637D2E");
 
     try
     {
-        auto arg_salt = po::value<std::string>()->default_value(kSalt, "");
-        auto arg_guid = po::value<std::string>()->default_value(Utils::GetMachineGuid(), "");
-        auto arg_path = po::value<std::string>()->default_value(Utils::GetPathToUserPreferencesBag(), "");
+        auto arg_salt = po::value<std::string>()->default_value(UserPreferences::Common::GetDefaultSalt(), "");
+        auto arg_guid = po::value<std::string>()->default_value(UserPreferences::Common::GetMachineGuid(), "");
+        auto arg_path = po::value<std::string>()->default_value(UserPreferences::Common::GetPathToUserPreferencesBag(), "");
 
         auto commandline_descriptions = po::options_description("Arguments");
         commandline_descriptions.add_options()
@@ -38,8 +37,8 @@ int main(int argc, char* argv[])
         auto guid = vm["guid"].as<std::string>();
         auto salt = vm["salt"].as<std::string>();
 
-        auto ciphertext = Utils::ReadAllBytes(vm["path"].as<std::string>());
-        auto plaintext = Encryption::DecryptData(ciphertext, guid, salt);
+        auto ciphertext = UserPreferences::Common::ReadAllBytes(vm["path"].as<std::string>());
+        auto plaintext = UserPreferences::Encryption::DecryptData(ciphertext, guid, salt);
         auto plaintext_string = std::string(plaintext.begin(), plaintext.end());
 
         std::cout << plaintext_string << std::endl;
