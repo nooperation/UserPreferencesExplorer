@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<package >
+  <metadata>
+    <id>SanTools.LibUserPreferences</id>
+    <version>$version$</version>
+    <authors>NoOperation</authors>
+    <owners>NoOperation</owners>
+    <licenseUrl>https://github.com/nooperation/UserPreferencesExplorer/blob/master/LICENSE</licenseUrl>
+    <projectUrl>https://github.com/nooperation/UserPreferencesExplorer/</projectUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>Tools for interacting with the encrypted UserPreferences.bag for Project Sansar </description>
+    <copyright>Copyright 2018</copyright>
+    <tags>Native SanTools Sansar UserPreferences</tags>
+  </metadata>
+  <files>
+    <file src="build\**" target="build" />
+    <file src="x64\Release\LibUserPreferences.dll" target="contentFiles\x64\LibUserPreferences.dll" />
+  </files>
+</package>
