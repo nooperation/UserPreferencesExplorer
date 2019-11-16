@@ -6,7 +6,9 @@
 #include <vector>
 #include <string>
 
-#pragma comment(lib, "libeay32")
+#pragma comment(lib, "libssl_static")
+#pragma comment(lib, "libcrypto_static")
+#pragma comment(lib, "ws2_32")
 
 namespace
 {
@@ -69,11 +71,12 @@ namespace
         auto cipher = EVP_aes_256_cbc();
         auto ctx = EVP_CIPHER_CTX_new();
 
-        auto num_blocks = plaintext.size() / cipher->block_size;
-        if (plaintext.size() % cipher->block_size != 0) {
+        auto cipher_block_size = EVP_CIPHER_block_size(cipher);
+        auto num_blocks = plaintext.size() / cipher_block_size;
+        if (plaintext.size() % cipher_block_size != 0) {
             ++num_blocks;
         }
-        auto out_plaintext = std::vector<uint8_t>(cipher->block_size * num_blocks);
+        auto out_plaintext = std::vector<uint8_t>(cipher_block_size * num_blocks);
 
         EVP_CIPHER_CTX_init(ctx);
 
@@ -120,8 +123,11 @@ namespace
         auto cipher = EVP_aes_256_cbc();
         auto md = EVP_sha1();
 
-        out_key.resize(cipher->key_len);
-        out_initialization_vector.resize(cipher->iv_len);
+        auto cipher_key_length = EVP_CIPHER_key_length(cipher);
+        auto cipher_iv_length = EVP_CIPHER_iv_length(cipher);
+
+        out_key.resize(cipher_key_length);
+        out_initialization_vector.resize(cipher_iv_length);
 
         auto derived_key_length = EVP_BytesToKey(
             cipher,
@@ -171,9 +177,9 @@ namespace
     /// <param name="is_encrypting">Determines if data should be encrypted or decrypted</param>
     /// <returns>Encrypted or decrypted data</returns>
     std::vector<uint8_t> EncryptOrDecryptData(
-        const std::vector<uint8_t>& data,
-        const std::string& machine_guid,
-        const std::string& salt_string,
+        const std::vector<uint8_t> &data,
+        const std::string &machine_guid,
+        const std::string &salt_string,
         bool is_encrypting)
     {
         std::vector<uint8_t> salt_bytes;
@@ -202,17 +208,17 @@ namespace UserPreferences
     namespace Encryption
     {
         std::vector<uint8_t> DecryptData(
-            const std::vector<uint8_t>& encrypted_data,
-            const std::string& machine_guid,
-            const std::string& salt_string)
+            const std::vector<uint8_t> &encrypted_data,
+            const std::string &machine_guid,
+            const std::string &salt_string)
         {
             return EncryptOrDecryptData(encrypted_data, machine_guid, salt_string, false);
         }
 
         std::vector<uint8_t> EncryptData(
-            const std::vector<uint8_t>& plaintext_data,
-            const std::string& machine_guid,
-            const std::string& salt_string)
+            const std::vector<uint8_t> &plaintext_data,
+            const std::string &machine_guid,
+            const std::string &salt_string)
         {
             return EncryptOrDecryptData(plaintext_data, machine_guid, salt_string, true);
         }
